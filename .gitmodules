@@ -1,0 +1,3 @@
+[submodule "isotp-c"]
+	path = isotp-c
+	url = git@github.com:SimonCahill/isotp-c.git
