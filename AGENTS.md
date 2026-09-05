@@ -27,13 +27,14 @@ injectable 32-bit microsecond clock (`setClock`) - tests use a fake clock.
 ## Build & test (Windows/MSVC; same flow works with GCC/ESP-IDF)
 
 ```
-cmake -S . -B build -G "Visual Studio 17 2022" -A x64
-cmake --build build --config Release
-build\tests\Release\isotp_cpp_tests.exe     :: exit 0 = pass
+cmake -S . -B build
+cmake --build build --config Debug
+build\tests\Debug\isotp_cpp_tests.exe     :: exit 0 = pass
 ```
 
-Use `Release`: the upstream library emits `/O2` outside single-config Debug
-builds, which conflicts with MSVC Debug `/RTC1`.
+The upstream `isotp.c` is compiled directly by this CMake (not via its own
+`isotp-c/CMakeLists.txt`, which forces `/O2` outside single-config Debug and so
+conflicts with MSVC Debug).
 
 ## Feature macros (public ABI)
 

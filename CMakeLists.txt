@@ -8,31 +8,37 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 option(ISOTP_CPP_BUILD_TESTS "Build the isotp_cpp test suite" ON)
 
-# Feature options the wrapper relies on. The C library compiles isotp.c with
-# these only privately, so they are also (re)declared PUBLIC below to keep the
-# IsoTpLink ABI and the isotp_set_*_cb API visible to consumers.
-set(isotpc_ENABLE_TRANSCEIVE_EVENTS ON CACHE BOOL "" FORCE)
-set(isotpc_ENABLE_CAN_SEND_ARG ON CACHE BOOL "" FORCE)
+# The upstream C library is a single translation unit. It is compiled here
+# directly (not via isotp-c/CMakeLists.txt) so this wrapper controls the flags
+# and the feature macros consistently for all configurations (upstream adds
+# /O2 outside single-config Debug, which conflicts with MSVC Debug /RTC1).
+#
+# Feature macros that change the IsoTpLink ABI/API are PUBLIC so any consumer
+# sees the same layout. Padding is left off: frames are sent with their exact
+# length (matches the rest of the j2534ble host/device code).
+set(ISOTP_C_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/isotp-c)
 
-add_subdirectory(isotp-c)
+add_library(isotp_c STATIC ${ISOTP_C_ROOT}/isotp.c)
+add_library(isotp_cpp::isotp_c ALIAS isotp_c)
+target_include_directories(isotp_c PUBLIC ${ISOTP_C_ROOT})
+target_compile_definitions(
+    isotp_c PUBLIC
+    ISO_TP_MAX_CAN_FRAME_SIZE=8
+    ISO_TP_DEFAULT_TX_DL=8
+    ISO_TP_TRANSMIT_COMPLETE_CALLBACK
+    ISO_TP_RECEIVE_COMPLETE_CALLBACK
+    ISO_TP_USER_SEND_CAN_ARG
+)
+if(MSVC)
+    target_compile_options(isotp_c PRIVATE /W4)
+else()
+    target_compile_options(isotp_c PRIVATE -Wall -Wextra -Wno-unused-parameter)
+endif()
 
 add_library(isotp_cpp src/isotp.cpp)
 add_library(isotp_cpp::isotp_cpp ALIAS isotp_cpp)
 target_include_directories(isotp_cpp PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
-target_link_libraries(isotp_cpp PUBLIC isotp)
-
-target_compile_definitions(
-    isotp_cpp PUBLIC
-    ISO_TP_TRANSMIT_COMPLETE_CALLBACK
-    ISO_TP_RECEIVE_COMPLETE_CALLBACK
-    ISO_TP_USER_SEND_CAN_ARG
-)
-target_compile_definitions(
-    isotp PUBLIC
-    ISO_TP_TRANSMIT_COMPLETE_CALLBACK
-    ISO_TP_RECEIVE_COMPLETE_CALLBACK
-    ISO_TP_USER_SEND_CAN_ARG
-)
+target_link_libraries(isotp_cpp PUBLIC isotp_c)
 
 if(ISOTP_CPP_BUILD_TESTS)
     enable_testing()
