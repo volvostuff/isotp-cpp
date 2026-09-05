@@ -33,6 +33,10 @@ if(MSVC)
     target_compile_options(isotp_c PRIVATE /W4)
 else()
     target_compile_options(isotp_c PRIVATE -Wall -Wextra -Wno-unused-parameter)
+    # GCC 12+ stringop-overflow false positive in upstream isotp.c: the SF_DL
+    # escape path is unreachable with classic CAN (send_size <= 7), but the
+    # compiler cannot prove it and -Werror would fail the build.
+    target_compile_options(isotp_c PRIVATE $<$<C_COMPILER_ID:GNU>:-Wno-stringop-overflow>)
 endif()
 
 add_library(isotp_cpp src/isotp.cpp)
