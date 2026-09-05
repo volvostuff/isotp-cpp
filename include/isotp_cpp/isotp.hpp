@@ -111,6 +111,12 @@ class Link
     bool sendInProgress() const;
     uint32_t maxPayload() const { return _config.sendBufferBytes; }
 
+    // Last protocol result of the send/receive direction (0 = OK, negative =
+    // one of the ISOTP_PROTOCOL_RESULT_* codes). Useful to distinguish a
+    // completed transmission from an error after sendInProgress() drops.
+    int lastTxProtocolResult() const;
+    int lastRxProtocolResult() const;
+
     // Internal: forwards a frame from the C library's user hook to the link's
     // CanDriver (see src/isotp.cpp). Do not call directly.
     static bool transmitFrame(void* impl, uint32_t arbitrationId, const uint8_t* data,

@@ -259,6 +259,16 @@ bool Link::sendInProgress() const
     return _started && _impl->sendActive;
 }
 
+int Link::lastTxProtocolResult() const
+{
+    return (_started && _impl != nullptr) ? _impl->link.send_protocol_result : 0;
+}
+
+int Link::lastRxProtocolResult() const
+{
+    return (_started && _impl != nullptr) ? _impl->link.receive_protocol_result : 0;
+}
+
 bool Link::transmitFrame(void* arg, uint32_t arbitrationId, const uint8_t* data, uint8_t size)
 {
     if (arg == nullptr || data == nullptr) {
