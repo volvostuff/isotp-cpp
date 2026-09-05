@@ -189,8 +189,11 @@ void testMultiFrameRoundtrip()
     CHECK(a.start());
     CHECK(b.start());
 
+    // 2000 bytes: FF + many CF. With the ISO-TP block size (BS) default of 255
+    // a 2000-byte payload spans several blocks, so the receiver emits more than
+    // one flow-control frame.
     std::vector<uint8_t> payload;
-    for (int i = 0; i < 1000; ++i) {
+    for (int i = 0; i < 2000; ++i) {
         payload.push_back(static_cast<uint8_t>(i & 0xFF));
     }
     CHECK_EQ(a.send(payload), isotp_cpp::Result::Ok);
