@@ -221,8 +221,9 @@ void testTxTimeoutWithoutFlowControl()
     std::vector<uint8_t> payload(100, 0x55);
     CHECK_EQ(a.send(payload), isotp_cpp::Result::Ok); // FF queued, awaiting FC
 
-    // No peer answers: frames are dropped, the clock advances -> N_Bs timeout.
-    for (int i = 0; i < 400 && !ra.errored; ++i) {
+    // No peer answers: frames are dropped, the clock advances -> N_Bs timeout
+    // (compile-time ISO_TP_DEFAULT_RESPONSE_TIMEOUT_US = 5 s).
+    for (int i = 0; i < 5600 && !ra.errored; ++i) {
         bus.pending.clear();
         a.poll();
         clock.advance(1000);
